@@ -1,4 +1,5 @@
-function resize_handler(){
+function resize_handler(space){
+
     window.addEventListener('resize', function(){
         space.camera.aspect = window.innerWidth/window.innerHeight
         space.camera.updateProjectionMatrix()

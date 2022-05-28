@@ -1,6 +1,7 @@
 import Space from './classes/Space.js'
 import Board from './classes/Board.js'
 import Card from './classes/Card.js'
+import {resize_handler} from './utilityFunctions.js'
 
 let root = document.getElementById('root')
 

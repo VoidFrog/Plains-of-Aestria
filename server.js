@@ -1,16 +1,47 @@
-let express = require('express')
-let app = express()
-const PORT = 3000 
+// --- package imports ---
+const express = require('express')
+const cookieParser = require("cookie-parser");
+const cors = require("cors")
+const mongoose = require("mongoose")
+require("dotenv").config()
 
+// --- global vars ---
+const app = express()
+const PORT = process.env.PORT || 3000
+const corsOptions = {
+    origin: true,
+    credentials: true,
+    optionsSuccessStatus: 200,
+  };
 
+// --- importing routes ---
+const authRoutes = require("./routes/authRoutes")
+const gameRoutes = require("./routes/gameRoutes")
+
+// --- app use --
 app.use(express.static('./static'))
 app.use(express.static('./libs'))
 
+app.use(express.urlencoded({extended: true}))
+app.use(express.json())
+app.use(express.text())
 
-app.get('/', (req, res) => {
-    res.sendFile('index.html')
-})
+app.use(cookieParser())
+app.use(cors(corsOptions))
 
+// --- app use routes ---
+app.use(authRoutes)
+app.use(gameRoutes)
+
+// --- connecting to mongodb ---
+const mongodbUrl = process.env.MONGODB_URL || "";
+mongoose
+  .connect(mongodbUrl)
+  .then(() => console.log("mongodb successfully connected"))
+  .catch((err) => console.log(err));
+
+
+// --- listening ---
 
 app.listen(PORT, () => {
     console.log(`server is running on port: ${PORT}`)

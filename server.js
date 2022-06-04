@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors")
 const mongoose = require("mongoose")
 require("dotenv").config()
+const Fraction = require("./models/Fraction")
 
 // --- global vars ---
 const app = express()

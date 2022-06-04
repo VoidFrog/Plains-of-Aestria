@@ -73,25 +73,6 @@ const verifyuser = async (req, res, next) => {
   const user = await User.findById(userData.id)
   res.json(user)
   next()
-  // console.log(token);
-//   if (token) {
-//     jwt.verify(
-//       token,
-//       process.env.JWT_TOKEN,
-//       async (err, decodedToken) => {
-//         if (err) {
-//           // console.log("tutaj");
-//           // console.log(err.message);
-//         } else {
-//           let user = await User.findById(decodedToken.id);
-//           res.json(user);
-//           next();
-//         }
-//       }
-//     );
-//   } else {
-//     next();
-//   }
 };
 
 const logout = (req, res) => {
@@ -118,4 +99,17 @@ const sendRegisterPage = async (req,res) => {
   
   return res.sendFile(path.resolve("static/pages/register.html"))
 }
-module.exports = { signup, login, logout, verifyuser, sendLoginPage, sendRegisterPage };
+
+const getUserInfo = async (req, res) => {
+  const decodedUser = await userHelpers.verifyUser(req.cookies.jwt)
+  if (decodedUser.err) {
+    return res.send({err: "Cannot verify user"})
+  }
+  const foundUser = await User.findById(decodedUser.id)
+  if (!foundUser) {
+    return res.send({err: "Cannot find user"})
+  }
+
+  return res.send(foundUser)
+}
+module.exports = { signup, login, logout, verifyuser, sendLoginPage, sendRegisterPage, getUserInfo };

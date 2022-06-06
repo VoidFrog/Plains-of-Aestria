@@ -1,10 +1,16 @@
+import { UserContext } from "./UserContext.js";
+
+
 export class Home {
     
     constructor() {
         this.userData;
         this.fractionData;
         this.userChoosenFractionP;
+        this.deckShowed = false
+        this.socketEstabilished = false
         this.mainDiv = document.getElementById("main")
+        this.deckDiv = document.getElementsByClassName('deck')[0]
         this.insertDiv = document.getElementsByClassName("user-info")[0]
         this.userDiv = document.getElementsByClassName("user")[0]
         this.init()
@@ -23,7 +29,7 @@ export class Home {
             })
             const resData = await res.json()
             this.userData = resData
-            console.log(this.userData)
+            // console.log(this.userData)
             this.createUserInfo(resData)
         } catch (err) {
 
@@ -55,6 +61,7 @@ export class Home {
         startGameButton.setAttribute("disabled", "true")
         startGameButton.innerText = "START GAME"
         startGameButton.classList.add("button")
+        startGameButton.onclick = () => this.showSearchForGameMenu()
         this.startGameButton = startGameButton
 
         this.userDiv.appendChild(userName)
@@ -66,10 +73,13 @@ export class Home {
 
     showMainMenu = () => {
         this.fractionMenu.style.display = "none"
+        // this.searchGameMenu.style.display = "none"
         this.insertDiv.style.display = "flex"
         this.userChoosenFractionP.innerText = "Choosen fraction: " + this.fractionData.name
         this.startGameButton.removeAttribute("disabled")
-        this.showDeckCards()
+        if (!this.deckShowed) {
+            this.showDeckCards()
+        }
 
     }
 
@@ -182,7 +192,81 @@ export class Home {
     }
 
     showDeckCards = () => {
+        this.deckShowed = true
+        const title = document.createElement("h3")
+        title.innerText = "Your cards: "
+        title.classList.add("deck-title")
+        this.deckDiv.appendChild(title)
+    }
+
+    showSearchForGameMenu = () => {
+        console.log("aa")
+        this.insertDiv.style.display = "none"
+        if (this.searchGameMenu) {
+            return this.searchGameMenu.style.display = "flex"
+        }
         
+        // creating choose fraction menu
+        const main = document.createElement("div")
+        main.classList.add("search-game-menu")
+        this.searchGameMenu = main
+
+        const title = document.createElement("h3")
+        title.innerText = "Search for game"
+        main.appendChild(title)
+
+        this.mainDiv.appendChild(main)
+
+        const gamePickMenu = document.createElement("div")
+        this.gamePickMenu = gamePickMenu
+        gamePickMenu.classList.add("game-pick-menu")
+        main.appendChild(gamePickMenu)
+        // create game button
+        const createGameBtn = document.createElement("button")
+        createGameBtn.classList.add("button")
+        createGameBtn.innerText = "CREATE GAME"
+        createGameBtn.onclick = () => this.createGame()
+        main.appendChild(createGameBtn)
+
+        // join game button
+        const joinGameButton = document.createElement("button")
+        joinGameButton.classList.add("button")
+        joinGameButton.innerText = "JOIN GAME"
+
+        main.appendChild(joinGameButton)
+
+        // search for random game button
+        const randomGameBtn = document.createElement("button")
+        randomGameBtn.classList.add("button")
+        randomGameBtn.innerText = "RANDOM ENEMY"
+        randomGameBtn.onclick = () => this.searchForRandomGame()
+        main.appendChild(randomGameBtn)
+
+        // back button
+        const backBtn = document.createElement("button")
+        backBtn.classList.add("back-button")
+        backBtn.classList.add("button")
+        backBtn.innerText = "BACK"
+        backBtn.onclick = () => {
+            this.searchGameMenu.style.display = "none"
+            this.showMainMenu()
+        }
+        main.appendChild(backBtn)
+
+        if (!this.socketEstabilished) {
+            this.estabilishSocket()
+        }
+    }
+
+    searchForRandomGame = () => {
+        const context = {
+            userId: this.userData._id,
+            userName: this.userData.name,
+            userEmail: this.userData.email,
+            fraction: this.fractionData
+        }
+        sessionStorage.setItem("UserContext", JSON.stringify(context))
+        window.location.href = "/search"
     }
 
     fetchForFractions = () => {
@@ -197,5 +281,17 @@ export class Home {
                 reject({err})
             }
         })
+    }
+
+    estabilishSocket = () => {
+        const socket = io.connect("http://localhost:3001");
+        socket.emit("join-lobby", {userId: this.userData._id});
+        this.socketEstabilished = true
+    }
+
+    createGame = () => {
+        if (!this.socketEstabilished) return
+        const createGameMenu = document.createElement("div")
+        createGameMenu.classList.add(createGameMenu)
     }
 }

@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors")
 const mongoose = require("mongoose")
 require("dotenv").config()
-const Fraction = require("./models/Fraction")
+// const Fraction = require("./models/Fraction")
 
 // --- global vars ---
 const app = express()
@@ -17,6 +17,7 @@ const corsOptions = {
 
 // --- importing routes ---
 const authRoutes = require("./routes/authRoutes")
+const searchRoutes = require("./routes/searchRoutes")
 const gameRoutes = require("./routes/gameRoutes")
 
 // --- app use --
@@ -32,6 +33,7 @@ app.use(cors(corsOptions))
 
 // --- app use routes ---
 app.use(authRoutes)
+app.use(searchRoutes)
 app.use(gameRoutes)
 
 // --- connecting to mongodb ---
@@ -47,3 +49,6 @@ mongoose
 app.listen(PORT, () => {
     console.log(`server is running on port: ${PORT}`)
 })
+
+// --- create socket.io server ---
+require("./socketio/init")

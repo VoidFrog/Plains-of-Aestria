@@ -1,6 +1,8 @@
 @import './style.scss';
+@import "./animations.scss";
+@import "./variables.scss";
 
-$menuBackground: rgba(240,255,240, 0.75);
+
 
 #main {
     display: flex;
@@ -39,11 +41,16 @@ $menuBackground: rgba(240,255,240, 0.75);
             -webkit-text-fill-color: transparent;
         }
 
-        .user-email {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .user {
+
+            .user-email {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
         }
+       
     }
 
     .choose-fraction-menu {
@@ -164,40 +171,49 @@ $menuBackground: rgba(240,255,240, 0.75);
             }
         }
     }
-}
 
 
-@keyframes moveBgc {
-    0% {
-        background-position-x: left;
-    } 50% {
-        background-position-x: right;
-    } 100% {
-        background-position-x: left;
+    .search-game-menu {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        // align-items: center;
+        justify-content: center;
+        background: $menuBackground;
+        animation-name: stretchBackground;
+        animation-duration: .6s;
+        animation-fill-mode: forwards;
+        padding-left: 8px;
+        overflow-y: scroll;
+
+        & > * {
+            opacity: 0;
+            animation-name: showFrom0Opacity;
+            animation-delay: .6s;
+            animation-duration: .6s;
+            animation-fill-mode: forwards;
+        }
+
+        h3 {
+            position: absolute;
+            width: 100%;
+            top: 50px;
+            text-align: center;
+            font-size: 40px;
+        }
+
+        .back-button {
+            margin-top: 100px;
+        }
     }
 }
 
-@keyframes stretchBackground {
-    from {
-        width: 10%;
-        height: 10%;
-    } to {
-        width: 100%;
-        height: 100%;
-    }
-}
 
-@keyframes showFrom0Opacity {
-    from {
-        display: block;
-        opacity: 0;
-    } to {
-        display: block;
-        opacity: 1;
-    }
-}
+
 
 .button {
+    position: relative;
+    left: calc(50% - 60px);
     width: 120px;
     height: 35px;
     background-color: #63d471;

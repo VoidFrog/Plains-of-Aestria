@@ -2,6 +2,8 @@
   "dependencies": {
     "@tweenjs/tween.js": "^18.6.4",
     "express": "^4.18.1",
+    "three": "^0.141.0",
+    "three-orbitcontrols": "^2.110.3",
     "tween": "^0.9.0",
     "tween.js": "^16.6.0"
   }

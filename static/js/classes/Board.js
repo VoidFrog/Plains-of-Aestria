@@ -81,6 +81,10 @@ export default class Board {
         return texture
     }
 
+    display_deck(){
+        
+    }
+
 
 }
 

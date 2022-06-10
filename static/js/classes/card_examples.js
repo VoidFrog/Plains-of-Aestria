@@ -35,7 +35,7 @@ let skeleton = {
     mana_cost: 2,
     name: 'skeleton',
     fraction: 'undead',
-    file_path: '../imgs/skeleton.png',
+    file_path: '../imgs/cards/skeleton.png',
     description: 'what a mad man, went onto the battlefield bare bones...'
 }
 
@@ -46,7 +46,7 @@ let shadow_demon = {
     mana_cost: 7,
     name: 'Shadow Demon',
     fraction: 'demon',
-    file_path: '../imgs/shadow_demon.png',
+    file_path: '../imgs/cards/shadow_demon.png',
     description: 'huh... now i am kinda afraid that my shadow is not what i think it is...',
     keywords: 'enraged' 
 }
@@ -60,7 +60,7 @@ let ghoul = {
     mana_cost: 3,
     name: 'Ghoul',
     fraction: 'undead',
-    file_path: '../imgs/ghoul.png',
+    file_path: '../imgs/cards/ghoul.png',
     description: 'In general ghouls are really hungry and bloodthirsty, and that applies to that little one',
     keywords: 'enraged' //+3
 }
@@ -72,7 +72,7 @@ let skeleton_warrior = {
     mana_cost: 8,
     name: 'Skeleton Warrior',
     fraction: 'undead',
-    file_path: '../imgs/skeleton_warrior.png',
+    file_path: '../imgs/cards/skeleton_warrior.png',
     description: 'He must have drunk a lot of milk when he was just a boy...',
     keywords: 'taunt'
 }
@@ -84,7 +84,7 @@ let lich = {
     mana_cost: 10,
     name: 'Lich',
     fraction: 'undead',
-    file_path: '../imgs/lich.png',
+    file_path: '../imgs/cards/lich.png',
     description: 'Truly terrifying being, which mastered the arts of magic',
     keywords: 'wizard' //deals 3dmg to random enemy as a spell (no counterattack) at the end of turn
 }
@@ -96,7 +96,7 @@ let skeleton_mage = {
     mana_cost: 6,
     name: 'Skeleton Mage',
     fraction: 'undead',
-    file_path: '../imgs/skeleton_mage.png',
+    file_path: '../imgs/cards/skeleton_mage.png',
     description: 'Skeletal mages were once a human mages... now they are not',
     keywords: 'wizard' //deals 2dmg
 }
@@ -108,7 +108,7 @@ let skeleton_mage_apprentice = {
     mana_cost: 2,
     name: 'Skeleton Mage Apprentice',
     fraction: 'undead',
-    file_path: '../imgs/skeleton_mage_apprentice.png',
+    file_path: '../imgs/cards/skeleton_mage_apprentice.png',
     description: 'Look! His hand is on fire!',
     keywords: 'wizard' //deals 1dmg
 } 
@@ -120,7 +120,7 @@ let zombie = {
     mana_cost: 4,
     name: 'Zombie',
     fraction: 'undead',
-    file_path: '../imgs/zombie.png',
+    file_path: '../imgs/cards/zombie.png',
     description: 'Braaaaaaaaaaaaaaaaaaaaaaaaainsssss...',
     keywords: 'none' //deals 2dmg
 }

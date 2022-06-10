@@ -14,7 +14,7 @@ let board = new Board(0,0,0, window.innerWidth, window.innerHeight, space)
 space.board = board
 
 
-for(let i = 0; i<6; i++){
+for(let i = 0; i<7; i++){
     let card = new Card(i, space, 500,10,300, all_cards)
     board.cards.push(card)
 }

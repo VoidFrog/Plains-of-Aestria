@@ -101,7 +101,7 @@ export class Home {
         const fractionContainer = document.createElement("div")
         fractionContainer.classList.add("fraction-container")
         const fractionsData = await this.fetchForFractions()
-        console.log(fractionsData)
+        // console.log(fractionsData)
          // --- choosen info ---
          const infoP = document.createElement("p")
          infoP.innerText = "You choosed: "
@@ -225,13 +225,14 @@ export class Home {
         const createGameBtn = document.createElement("button")
         createGameBtn.classList.add("button")
         createGameBtn.innerText = "CREATE GAME"
-        createGameBtn.onclick = () => this.createGame()
+        createGameBtn.onclick = () => this.showCreateGameMenu()
         main.appendChild(createGameBtn)
 
         // join game button
         const joinGameButton = document.createElement("button")
         joinGameButton.classList.add("button")
         joinGameButton.innerText = "JOIN GAME"
+        joinGameButton.onclick = () => this.showPrivateGamesMenu()
 
         main.appendChild(joinGameButton)
 
@@ -285,13 +286,223 @@ export class Home {
 
     estabilishSocket = () => {
         const socket = io.connect("http://localhost:3001");
+        this.socket = socket
         socket.emit("join-lobby", {userId: this.userData._id});
         this.socketEstabilished = true
     }
 
-    createGame = () => {
-        if (!this.socketEstabilished) return
+    showCreateGameMenu = () => {
+        if (!this.socketEstabilished) return // jeśli nie ma połączenia z socketem
+        if (this.createGameMenu) return this.createGameMenu.style.display = "flex" // jeśli było ju wcześniej generowane
+
         const createGameMenu = document.createElement("div")
-        createGameMenu.classList.add(createGameMenu)
+        createGameMenu.classList.add("create-game-menu")
+
+        const gameNameLabel = document.createElement("label")
+        gameNameLabel.setAttribute("for", "game-name")
+        gameNameLabel.innerText = "Game name"
+        const gameNameInput = document.createElement("input")
+        gameNameInput.setAttribute("id", "game-name")
+        gameNameInput.setAttribute("autocomplete", "off")
+        gameNameInput.setAttribute("placeholder", "name")
+        createGameMenu.appendChild(gameNameLabel)
+        createGameMenu.appendChild(gameNameInput)
+
+        const gamePasswordLabel = document.createElement("label")
+        gamePasswordLabel.setAttribute("for", "game-password")
+        gamePasswordLabel.innerText = "Game password"
+        const gamePasswordInput = document.createElement("input")
+        gamePasswordInput.setAttribute("id", "game-password")
+        gamePasswordInput.setAttribute("type", "password")
+        gamePasswordInput.setAttribute("autocomplete", "off")
+        gamePasswordInput.setAttribute("placeholder", "password")
+       
+        createGameMenu.appendChild(gamePasswordLabel)
+        createGameMenu.appendChild(gamePasswordInput)
+
+        const createGameButton = document.createElement("button")
+        createGameButton.innerText = "CREATE GAME"
+        createGameButton.classList.add("button")
+        createGameButton.setAttribute("disabled", "true")
+        createGameButton.onclick = () => this.createGame(gameNameInput.value, gamePasswordInput.value)
+
+        // unlblock/block button
+        gamePasswordInput.onchange = () => (gamePasswordInput.value && gameNameInput.value) ? createGameButton.removeAttribute("disabled"): createGameButton.setAttribute("disabled", "true")
+        gameNameInput.onchange = () => (gamePasswordInput.value && gameNameInput.value) ? createGameButton.removeAttribute("disabled"): createGameButton.setAttribute("disabled", "true")
+
+        createGameMenu.appendChild(createGameButton)
+        this.createGameMenu = createGameMenu
+        
+        // back button
+        const backButton = document.createElement("button")
+        backButton.innerText = "BACK"
+        backButton.classList.add("button")
+        backButton.onclick = () => this.createGameMenu.style.display = "none"
+        this.createGameMenu.appendChild(backButton)
+
+        this.mainDiv.appendChild(createGameMenu)
+
+    }
+
+    createGame = (gameName, gamePassword) => {
+        const context = {
+            userId: this.userData._id,
+            userName: this.userData.name,
+            userEmail: this.userData.email,
+            fraction: this.fractionData
+        }
+        const emitObject = {
+            userContext: context,
+            roomName: gameName,
+            passwordString: gamePassword,
+            creator: true
+        }
+
+        this.socket.emit("create-room", emitObject)
+        this.socket.on("room-created", (data) => {
+            sessionStorage.setItem("UserContext", JSON.stringify({...context, roomId: data.roomId, roomName: data.roomName}))
+            window.location.href = "/search"
+        })
+
+    }
+
+    showPrivateGamesMenu = () => {
+        if (!this.socketEstabilished) return
+        if (this.privateGamesMenu) return this.privateGamesMenu.style.display = "flex"
+        const container = document.createElement("div")
+        container.classList.add("private-games-menu")
+        this.privateGamesMenu = container
+
+        const privateGamesTable = document.createElement("table")
+        this.privateGamesTable = privateGamesTable
+        const tableHeadersRow = document.createElement("tr")
+        const nameHeaderCell = document.createElement("th")
+        nameHeaderCell.innerText = "Room Name"
+
+        const creatorNameCell = document.createElement("th")
+        creatorNameCell.innerText = "Owner"
+
+        const passwordCell = document.createElement("th")
+
+        tableHeadersRow.appendChild(nameHeaderCell)
+        tableHeadersRow.appendChild(creatorNameCell)
+        tableHeadersRow.appendChild(passwordCell)
+        privateGamesTable.appendChild(tableHeadersRow)
+        container.appendChild(privateGamesTable)
+
+
+        const joinButton = document.createElement("button")
+        joinButton.innerText = "JOIN ROOM"
+        joinButton.classList.add("button")
+        joinButton.setAttribute("disabled", "true")
+        joinButton.onclick = () => this.showJoinRoomMenu()
+        this.joinGameButton = joinButton
+        container.appendChild(joinButton)
+
+        const backButton = document.createElement("button")
+        backButton.innerText = "BACK"
+        backButton.classList.add("button")
+        backButton.onclick = () => this.privateGamesMenu.style.display = "none"
+        container.appendChild(backButton)
+        this.mainDiv.appendChild(container)
+
+        this.socket.emit("list-private-rooms")
+        this.socket.on("private-rooms", (data) => this.generatePrivateGamesTable(data))
+        this.socket.on("private-room-added", (data) => this.generatePrivateGamesTable([data]))
+    }
+
+    generatePrivateGamesTable = (roomsData) => {
+        roomsData.forEach((roomData) => {
+            const tr = document.createElement("tr")
+            // -_-_ selecting private game room -_-_
+
+            tr.onclick = () => {
+                if (this.selectedPrivateRoom) {
+                    this.selectedPrivateRoom.row.style.background = "none"
+                }
+                this.selectedPrivateRoom = {row: tr, roomData}
+                this.joinGameButton.removeAttribute("disabled")
+                this.selectedPrivateRoom.row.style.background = "#afb"
+            }
+
+
+            // --- creating table ---
+            const roomNameCell = document.createElement("td")
+            roomNameCell.innerText = roomData.roomName
+
+            const creatorNameCell = document.createElement("td")
+            creatorNameCell.innerText = roomData.userContext.userName
+
+            const lockIconCell = document.createElement("td")
+            lockIconCell.innerText = "🔒"
+
+            tr.appendChild(roomNameCell)
+            tr.appendChild(creatorNameCell)
+            tr.appendChild(lockIconCell)
+            this.privateGamesTable.appendChild(tr)
+        })
+    }
+
+    showJoinRoomMenu = () => {
+        const container = document.createElement("div")
+        container.classList.add("join-password-menu")
+
+        const passLabel = document.createElement("label")
+        passLabel.setAttribute("for", "join-room-pass")
+        passLabel.innerText = "Enter room password: "
+        container.appendChild(passLabel)
+
+        const joinButton = document.createElement("button")
+        const passInput = document.createElement("input")
+        passInput.setAttribute("id", "join-room-pass")
+        passInput.setAttribute("type", "password")
+        passInput.setAttribute("placeholder", "Room password")
+        this.roomPassInput = passInput
+        passInput.onchange = () => passInput.value ? joinButton.removeAttribute('disabled') : joinButton.setAttribute('disabled', "true")
+        container.appendChild(passInput)
+
+        joinButton.innerText = "JOIN"
+        joinButton.classList.add("button")
+        joinButton.setAttribute('disabled', "true")
+        joinButton.onclick = () => this.validatePass()
+        container.appendChild(joinButton)
+
+        const backButton = document.createElement("button")
+        backButton.innerText = "BACK"
+        backButton.classList.add("button")
+        backButton.onclick = () => this.mainDiv.removeChild(container)
+        container.appendChild(backButton)
+
+        const joinErrP = document.createElement("p")
+        this.joinErrP = joinErrP
+        container.appendChild(joinErrP)
+
+        this.mainDiv.appendChild(container)
+    }
+
+    validatePass = () => {
+        // console.log(this.roomPassInput.value, this.selectedPrivateRoom.roomData)
+        this.socket.emit("join-room", {...this.selectedPrivateRoom.roomData, roomPass: this.roomPassInput.value})
+
+        this.socket.on("user-join-room", (data) => {
+            console.log(data)
+            if (data.err) return this.joinErrP.innerText = data.err
+            const userContext = {
+                userId: this.userData._id,
+                userName: this.userData.name,
+                userEmail: this.userData.email,
+                fraction: this.fractionData
+            }
+            
+            //good password
+            const context = {
+                // userContext: data.userContext,
+                userContext,
+                roomName: data.roomName, 
+                roomId: data.roomId
+            }
+            sessionStorage.setItem("UserContext", JSON.stringify(context))
+            window.location.href = "/search"
+        })
     }
 }

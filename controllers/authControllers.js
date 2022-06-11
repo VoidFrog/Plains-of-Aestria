@@ -31,15 +31,15 @@ const alertErr = (err) => {
 // ----- export functions -----
 const signup = async (req, res) => {
   const { name, email, password } = JSON.parse(req.body);
-  console.log(name, email, password,)
+  // console.log(name, email, password,)
   try {
     const user = await User.create({ name, email, password});
-    console.log(user)
+    // console.log(user)
     const token = await userHelpers.signToken(user.email, user._id, jwtAge)
     if (token.err) {
       return res.send({err: token.err})
     }
-    console.log(token);
+    // console.log(token);
     res.cookie("jwt", token, { httpOnly: true, maxAge: 60*60*24* 1000 });
     res.status(201).json({ user });
     // res.redirect("/")

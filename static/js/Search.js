@@ -4,6 +4,7 @@ export class Search {
     constructor () {
         this.mainDiv = document.getElementById("main")
         this.userContext = JSON.parse(sessionStorage.getItem("UserContext"))
+        this.isPprivateRoom = this.userContext?.roomName ? true : false
         this.validateUser()
     }
 
@@ -17,21 +18,39 @@ export class Search {
 
     estabilishSocket = () => {
         const socket = io.connect("http://localhost:3001");
-
-        socket.emit("find-opponent", {context: this.userContext});
-        socket.on("pair-with-opponent", (data) => this.pairWithOpponent(data))
+        console.log(this.userContext)
+        console.log(this.isPprivateRoom)
+        if (!this.isPprivateRoom) {
+            socket.emit("find-opponent", {context: this.userContext});
+            socket.on("pair-with-opponent", (data) => this.pairWithOpponent(data))
+        } else {
+            console.log(this.userContext)
+            if (!this.userContext.creator) {
+                socket.emit("join-game", this.userContext)
+            }
+            socket.on("users-joined-search", (data) => this.pairWithOpponent(data))
+        }
         
+
         this.showSearchingMenu()
         
     }
 
     pairWithOpponent = async (socketData) => {
+        if (!socketData?.enemyContext || !socketData?.userContext) return
         console.log(socketData)
         this.loaderContainer.style.display = "none"
         this.informationContainer.innerHTML = ""
         this.socketRoom = socketData.socketRoom
-        const usersArr = Object.values(socketData).slice(0, 2)
+        let usersArr
+        if (!this.isPprivateRoom) {
+             usersArr = Object.values(socketData).slice(0, 2)
+            } else {
+            // usersArr = Object.values(socketData).slice(0, 2)
+             usersArr = [socketData.userContext, socketData.enemyContext]
+        }
         this.usersArr = usersArr
+        console.log(usersArr)
 
          // _-_-_- set user cookies, to join game (without them it is impossible) _-_-_-
         this.setGameCookies()
@@ -66,7 +85,10 @@ export class Search {
     }
 
     showSearchingMenu = () => {
-        console.log(this.userContext.fraction.name)
+        this.gameContext = this.userContext
+        this.userContext = this.userContext?.userContext ? this.userContext.userContext : this.userContext
+        // this.userContext = this.userContext.userContext
+        // console.log(this.userContext.fraction.name)
         const informations = document.createElement("div")
         informations.setAttribute("id", "information-container")
         this.informationContainer = informations

@@ -175,6 +175,60 @@
       font-size: 40px; }
     #main .search-game-menu .back-button {
       margin-top: 100px; }
+  #main .create-game-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(240, 255, 240, 0.9);
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    z-index: 3; }
+    #main .create-game-menu .button {
+      left: 0; }
+  #main .private-games-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    background-color: rgba(240, 255, 240, 0.9); }
+    #main .private-games-menu .button {
+      margin-top: 20px;
+      left: 0; }
+    #main .private-games-menu table tr, #main .private-games-menu table td, #main .private-games-menu table th {
+      border: 2px solid #8f8; }
+    #main .private-games-menu table th {
+      background-color: #fff !important;
+      font-size: 20px;
+      background-clip: text;
+      background: -webkit-linear-gradient(#000, #f00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+      width: 200px; }
+    #main .private-games-menu table td {
+      font-size: 14px;
+      width: 200px; }
+  #main .join-password-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    background-color: rgba(240, 255, 240, 0.9); }
+    #main .join-password-menu input {
+      margin-bottom: 20px; }
+    #main .join-password-menu .button {
+      left: 0;
+      margin-bottom: 1px; }
 
 .button {
   position: relative;

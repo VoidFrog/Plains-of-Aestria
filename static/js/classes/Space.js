@@ -29,17 +29,19 @@ export default class Space {
 
         root.append(this.renderer.domElement)
         
+        this.card_choice() //card placement function also invoked here
         this.click_handling()
-        this.card_moving() //card placement function also invoked here 
         this.view_swapping()
         this.context_menu_display_card_info()
     }
 
     //B and T buttons
     view_swapping(){
-        let _this = this
+        const _this = this
         window.addEventListener('keydown', function(e){
-            console.log(e.code)
+            //console.log(e.code)
+            if(_this.board.end_turn_button) _this.board.end_turn_button.style.visibility = 'hidden'
+            
             if(e.code == "KeyT" && _this.view == 'tactical'){
                 _this.default_view()
             }
@@ -68,6 +70,7 @@ export default class Space {
         this.camera.position.set(0,1500,350)
         this.view = 'tactical'
 
+        this.board.end_turn_button.style.visibility = 'visible'
     }
 
     battlefield_view(){
@@ -140,10 +143,12 @@ export default class Space {
 
     card_handler(){
         let clicked = this.intersects[0]
+        if (clicked == null) return
 
+        console.log(clicked)
         for(let card of this.board.cards){
-            if(clicked.object.position.x == card.mesh.position.x && clicked.object.position.z == card.mesh.position.z){
-                if(card.state == 'board'){
+            if(card.mesh != null && clicked.object.position.x == card.mesh.position.x && clicked.object.position.z == card.mesh.position.z){
+                if(card.state == 'board' || card.state == 'deck' || card.state == 'used'){
                     return 
                 }
                 //sets chosen_card to the clicked one
@@ -151,7 +156,7 @@ export default class Space {
                 
                 //amplify effect of choosing card with adjusting its height
                 //if left, lower its height
-                this.chosen_card.object_group.position.y += 20
+                this.chosen_card.object_group.position.y = 150
 
                 console.log(card)
                 console.log('card chosen')
@@ -161,6 +166,17 @@ export default class Space {
 
     get_card_to_display_desc(clicked){
         for(let card of this.board.cards){
+            console.log(card, this.board.cards, clicked)
+
+            if(!card.mesh) continue
+            if(clicked.object.position.x == card.mesh.position.x && clicked.object.position.z == card.mesh.position.z){
+                return card
+            }
+        }
+
+        for(let card of this.board.cards_on_grid){
+            console.log(card)
+            if(card == null) continue
             if(clicked.object.position.x == card.mesh.position.x && clicked.object.position.z == card.mesh.position.z){
                 return card
             }
@@ -196,67 +212,92 @@ export default class Space {
         }
 
         if(intersects != null && intersects[1] != null && chosen_card != null){
+            let index = 14 //player grid starts at 14th position 
             for(let grid_placeholder of this.player_grid){
-                if(intersects[1].object.position.x == grid_placeholder.position.x && intersects[1].object.position.z == grid_placeholder.position.z){
-                    if(grid_placeholder.used == false){
-                        grid_placeholder.used = true
+                if(intersects[0].object.position.x == grid_placeholder.position.x && intersects[0].object.position.z == grid_placeholder.position.z){
+                    if(this.board.cards_on_grid[index] == null){
+                        //update the state of grid and card
                         chosen_card.state = 'board'
 
-                        console.log(chosen_card.mesh.position, grid_placeholder.position)
-                        
-                        chosen_card.object_group.position.y -= 5
-                        chosen_card.mesh.position.x = grid_placeholder.position.x
-                        chosen_card.mesh.position.z = grid_placeholder.position.z
-                        chosen_card.update_position()
+                        //add card to the cards_on_grid array
+                        this.board.cards_on_grid[index] = chosen_card// WILL BE USED FOR COMBAT MECHANICS
+                                                                     // SO IT IS IMPORTANT                     
+
+                        //animate and move card to the grid
+                        chosen_card.object_group.position.y = 5
+                        new TWEEN.Tween(chosen_card.mesh.position)
+                            .to({
+                                x: grid_placeholder.position.x,
+                                z :grid_placeholder.position.z
+                            }, 500)
+                            .easing(TWEEN.Easing.Exponential.Out)
+                            .start()
+                            .onUpdate(() => {
+                                chosen_card.update_position()
+                                chosen_card.set_position(chosen_card.x, chosen_card.y, chosen_card.z)
+                            })
     
                         console.log(chosen_card.object_group.position, grid_placeholder.position)
                     } 
                 }
+                index += 1
             }
+
+            return true
         }
+        return false
     }
 
-    card_moving(){
+    card_choice(){
         const _this = this
         const raycaster = new THREE.Raycaster()
         const mouseVector = new THREE.Vector2() 
 
-        let starting_x;
-        let starting_z;
         window.addEventListener('mousedown', function(e){
-            starting_x = e.clientX
-            starting_z = e.clientY
-        })
+            //placing cards on the grid
+            mouseVector.x = (e.clientX/window.innerWidth)*2 - 1
+            mouseVector.y = -(e.clientY/window.innerHeight)*2 + 1
+            raycaster.setFromCamera(mouseVector, _this.camera)
+            let drop_intersects = raycaster.intersectObjects(_this.scene.children)
 
-        window.addEventListener('mousemove', function(e){            
-            let x = e.clientX
-            let z = e.clientY
-        
-
-            if(_this.chosen_card != null){
-                _this.chosen_card.update_position()
+            if(_this.chosen_card){
+                let placed = _this.card_placement(_this.chosen_card, drop_intersects)   
+                if(!placed) _this.chosen_card.object_group.position.y = 50
                 
-                _this.chosen_card.mesh.position.x = x - window.innerWidth/2
-                _this.chosen_card.mesh.position.z = z - window.innerHeight/2
+                _this.chosen_card = null
+                console.log('no chosen card', _this.chosen_card)            
             }
         })
 
-        window.addEventListener('mouseup', function(e){
-            console.log(_this.chosen_card)
+        // window.addEventListener('mousemove', function(e){            
+        //     let x = e.clientX
+        //     let z = e.clientY
+        
+
+        //     if(_this.chosen_card != null){
+        //         _this.chosen_card.update_position()
+                
+        //         _this.chosen_card.mesh.position.x = x - window.innerWidth/2
+        //         _this.chosen_card.mesh.position.z = z - window.innerHeight/2
+        //     }
+        // })
+
+        // window.addEventListener('mouseup', function(e){
+        //     console.log(_this.chosen_card)
             
 
-            mouseVector.x = (e.clientX/window.innerWidth)*2 - 1
-            mouseVector.y = -(e.clientY/window.innerHeight)*2 + 1
+        //     mouseVector.x = (e.clientX/window.innerWidth)*2 - 1
+        //     mouseVector.y = -(e.clientY/window.innerHeight)*2 + 1
 
-            raycaster.setFromCamera(mouseVector, _this.camera)
-            let drop_intersects = raycaster.intersectObjects(_this.scene.children)
-            //placing cards on the grid
-            _this.card_placement(_this.chosen_card, drop_intersects)
+        //     raycaster.setFromCamera(mouseVector, _this.camera)
+        //     let drop_intersects = raycaster.intersectObjects(_this.scene.children)
+        //     //placing cards on the grid
+        //     _this.card_placement(_this.chosen_card, drop_intersects)
             
-            if(_this.chosen_card) _this.chosen_card.object_group.position.y = 10
-            _this.chosen_card = null
-            console.log('no chosen card', _this.chosen_card)
-        })
+        //     if(_this.chosen_card) _this.chosen_card.object_group.position.y = 50
+        //     _this.chosen_card = null
+        //     console.log('no chosen card', _this.chosen_card)
+        // })
     }
 
     create_axes(){
@@ -265,6 +306,7 @@ export default class Space {
     }
 
     render(){
+        TWEEN.update()
         requestAnimationFrame(this.render.bind(this))
         console.log('rendering in progress')
 

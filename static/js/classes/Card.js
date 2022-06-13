@@ -1,5 +1,5 @@
 export default class Card {
-    constructor(id, space, x, y, z, cards){
+    constructor(id, space, x, y, z, cards, add_to_space){
         this.object_group = new THREE.Group() //it contains card, texture and stats
         this.id = id;     //needed for card identification
         this.card; //this is the card data in json got by id
@@ -32,25 +32,45 @@ export default class Card {
         this.identify_card_via_id(cards)
         this.load_stats(this.card)
         this.create_stat_display()
-        this.init()
+
+        if(add_to_space){
+            this.init()
+        }
+
+
     }
 
+    //now the board and deck will be managing init
     init(){
-        this.geometry = new THREE.BoxGeometry(window.innerWidth/10, window.innerHeight/4.2, 20 )
-        this.material = new THREE.MeshBasicMaterial({
-            map: this.load_texture()
-        })
-
-        this.mesh = new THREE.Mesh(this.geometry, this.material)
-        this.mesh.rotation.x = (Math.PI/180) * 270
-        this.mesh.position.set(this.x, this.y, this.z)
-
         this.object_group.add(this.mesh)
         this.space.scene.add(this.object_group)
     }
 
+    create(){
+        this.geometry = new THREE.BoxGeometry(window.innerWidth/10, window.innerHeight/4.2, 20 )
+        let materials = [
+            new THREE.MeshBasicMaterial({map: this.load_custom_texture('../imgs/card_side1.png')}),
+            new THREE.MeshBasicMaterial({map: this.load_custom_texture('../imgs/card_side1.png')}),
+            new THREE.MeshBasicMaterial({map: this.load_custom_texture('../imgs/card_side1.png')}),
+            new THREE.MeshBasicMaterial({map: this.load_custom_texture('../imgs/card_side1.png')}),
+            new THREE.MeshBasicMaterial({map: this.load_texture()}),
+            new THREE.MeshBasicMaterial({map: this.load_custom_texture('../imgs/card_reverse.png')}),
+        ]
+
+        this.mesh = new THREE.Mesh(this.geometry, materials)
+        this.mesh.rotation.x = (Math.PI/180) * 270
+        this.mesh.position.set(this.x, this.y, this.z)
+    }
+
+    full_initialization(x, y, z){
+        this.create()
+        this.set_position(x,y,z)
+        this.init()
+        this.update_position()
+    }
+
     load_stats(card){
-        console.log(card)
+        //console.log(card)
 
         this.type = card.type
         this.mana_cost = card.mana_cost
@@ -67,12 +87,29 @@ export default class Card {
         this.y = this.mesh.position.y
         this.z = this.mesh.position.z
 
-        this.hp_stat.position.set(this.x+(this.width/2.3), this.y+12, this.z+(this.height/2.6))
-        this.atk_stat.position.set(this.x-(this.width/2.3), this.y+12, this.z+(this.height/2.6))
-        this.mana_cost_stat.position.set(this.x+(this.width/2.3), this.y+12, this.z-(this.height/2.6)) 
+        this.hp_stat.position.set(this.x+(this.width/2.3), this.y+13, this.z+(this.height/2.6))
+        this.atk_stat.position.set(this.x-(this.width/2.3), this.y+13, this.z+(this.height/2.6))
+        this.mana_cost_stat.position.set(this.x+(this.width/2.3), this.y+13, this.z-(this.height/2.6)) 
+    }
+
+    set_position(x, y, z){
+        this.mesh.position.x = x
+        this.mesh.position.y = y
+        this.mesh.position.z = z
+    }
+
+    move_to(x, y, z){
+        this.set_position(x, y, z)
+        this.update_position()
     }
 
     create_stat_display(){
+        if(this.hp_stat != null){
+            this.object_group.remove(this.hp_stat)
+            this.object_group.remove(this.atk_stat)
+            this.object_group.remove(this.mana_cost_stat)
+        }
+
         this.hp_stat = this.dcText(`${this.hp}`, 30, 30, 50, 0xffffff, 0x000000, "hp")
         this.atk_stat = this.dcText(`${this.atk}`, 30, 30, 50, 0xffffff, 0x000000, "atk")
         this.mana_cost_stat = this.dcText(`${this.mana_cost}`, 30, 30, 50, 0xffffff, 0x000000, "mana")
@@ -89,6 +126,12 @@ export default class Card {
         this.object_group.add(this.hp_stat)
         this.object_group.add(this.atk_stat)
         this.object_group.add(this.mana_cost_stat)
+    }
+
+    update_stat_display(){
+        this.hp_stat = this.dcText(`${this.hp}`, 30, 30, 50, 0xffffff, 0x000000, "hp")
+        this.atk_stat = this.dcText(`${this.atk}`, 30, 30, 50, 0xffffff, 0x000000, "atk")
+        this.mana_cost_stat = this.dcText(`${this.mana_cost}`, 30, 30, 50, 0xffffff, 0x000000, "mana")
     }
 
     dcText(txt, hWorldTxt, hWorldAll, hPxTxt, fgcolor, bgcolor, symbol) { // the routine
@@ -163,9 +206,9 @@ export default class Card {
         mesh.hPxAll = hPxAll;       //    and the height of the whole texture canvas
         mesh.ctx = ctx;             //    and the 2d texture context, for any glitter
         
-        console.log(wPxTxt, hPxTxt, wPxAll, hPxAll);
-        console.log(wWorldTxt, hWorldTxt, wWorldAll, hWorldAll);
-        console.log(mesh)
+        //console.log(wPxTxt, hPxTxt, wPxAll, hPxAll);
+        //console.log(wWorldTxt, hWorldTxt, wWorldAll, hWorldAll);
+        //console.log(mesh)
         return mesh;
         
 }
@@ -179,8 +222,17 @@ export default class Card {
         return texture
     }
 
+    load_custom_texture(texture_name){
+        const texture = new THREE.TextureLoader().load(`../imgs/${texture_name}`)
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+
+        return texture
+    }
+
     identify_card_via_id(cards){
-        console.log(cards)
+        //console.log(cards)
         let card_json = cards[this.id]
         this.card = card_json
     }

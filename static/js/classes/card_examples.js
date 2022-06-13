@@ -121,7 +121,7 @@ let zombie = {
     name: 'Zombie',
     fraction: 'undead',
     file_path: '../imgs/cards/zombie.png',
-    description: 'Braaaaaaaaaaaaaaaaaaaaaaaaainsssss...',
+    description: 'Braaaaaaaaaainsssss...',
     keywords: 'none' //deals 2dmg
 }
 
